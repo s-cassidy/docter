@@ -15,16 +15,18 @@ def main():
     search_result_page = ddg_search(search_str)
     results = [result for result in get_result_urls(search_result_page)]
     result_url, browser = select_result_and_browser(results, instance_config)
-    if result_url:
+    if result_url is not None:
         launch_page(browser, result_url)
 
 
 def get_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
+    parser.add_argument("-g", "--gui", action="store_true", help="use the default gui browser")
+    parser.add_argument("-l", "--lucky", action="store_true", help="open first result without asking confirmation")
     parser.add_argument("keyword",
-                        help="configurable keyword to select sources")
+                        help="configurable keyword to filter results from specific sources")
     parser.add_argument("terms", 
-                        help="terms to search for in the selected sources",
+                        help="terms to search for from keyword sources",
                         nargs=argparse.REMAINDER)
     return parser.parse_args()
 
@@ -35,12 +37,11 @@ class InstanceConfig:
         self.handle_no_keyword(global_config)
         self.defaultbrowser = global_config['defaultbrowser']
         self.defaultgui = global_config['defaultgui']
-        self.gui_browser = False
+        self.gui_browser = args.gui
+        self.lucky = args.lucky
         self.terms = args.terms
         self.added_terms = global_config['keywords'][self.keyword]['terms']
         self.sources = self.make_sources_dict(global_config)
-        print(self.sources)
-        self.additional_terms = global_config['keywords'][self.keyword]['terms']
 
     def make_sources_dict(self, global_config: dict) -> dict:
         keyword_sources = global_config['keywords'][self.keyword]['sources']
@@ -48,9 +49,9 @@ class InstanceConfig:
         sources_dict = dict()
         for source in keyword_sources:
             if source not in all_sources:
-                print(f"{word} source {source} not properly configured")
-            else:
-                sources_dict[source] = all_sources[source]
+                print(f"{self.keyword} source {source} not configured")
+                continue
+            sources_dict[source] = all_sources[source]
         return sources_dict
 
     def handle_no_keyword(self, config: dict) -> None: 
@@ -65,7 +66,7 @@ class InstanceConfig:
 
     def get_search_string(self) -> str:
         search_str = ' '.join(self.added_terms+self.terms)
-        print(f"Searching for {search_str}")
+        print(f"Searching DuckDuckGo for '{search_str}'")
         return search_str
 
     def match_url_with_source(self, url: str) -> str:
@@ -82,21 +83,22 @@ def select_result_and_browser(results: list, config) -> tuple:
     for result in results:
         if source := config.match_url_with_source(result):
             browser = select_browser(source, config)
-            if accept_page_launch(result, browser):
+            if config.lucky or offer_user_page_launch(result, browser):
                 return result, browser
-    else:
-        print(f"No other likely results found from {config.keyword}"
-              f" sources for {config.terms}."
-              )
-        return None, browser
+    print(f"No other likely results found from {config.keyword}"
+          f" sources for {config.terms}."
+          )
+    return None, browser
 
 
 def select_browser(source: str, config) -> str:
+    if config.gui_browser:
+        return config.defaultgui
     default = config.defaultbrowser
     return config.sources[source].get('browser', default)
 
 
-def accept_page_launch(url: str, browser: str) -> tuple:
+def offer_user_page_launch(url: str, browser: str) -> tuple:
     while True:
         response = input(f"Go to {url}? (browser: {browser}) Y/n: ").lower()
         if response.lower() in ["no", "n"]:
@@ -113,7 +115,6 @@ def load_config(path: str, keyword: str) -> dict:
             print(exc)
     instance_config = InstanceConfig(global_config, keyword)
     return instance_config
-
 
 
 def ddg_search(url_string: str) -> str:
@@ -135,6 +136,7 @@ def get_result_urls(results_html: str) -> str:
         match = re.search(exp, line)
         if match:
             yield match.group(1)
+
 
 def launch_page(browser: str, url: str, gui: bool = False) -> None:
     subprocess.run([browser, url])
