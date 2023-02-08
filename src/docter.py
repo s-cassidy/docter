@@ -15,9 +15,16 @@ def main():
     search_str = instance_config.get_search_string()
     search_result_page = ddg_search(search_str)
     results = [result for result in get_result_urls(search_result_page)]
-    result_url, browser = select_result_and_browser(results, instance_config)
-    if result_url is not None:
-        launch_page(browser, result_url)
+    for result in results:
+        result_url, browser = select_result_and_browser(result, instance_config)
+        if result_url is not None:
+            print("Launching page")
+            launch_page(browser, result_url)
+            print(f"{browser} browser closed, offering next search result (enter q if done)")
+    print(
+        f"No other likely results found from {instance_config.keyword}"
+        f" sources for '{' '.join(instance_config.terms)}'."
+    )
 
 
 def get_arguments() -> argparse.Namespace:
@@ -106,16 +113,11 @@ class InstanceConfig:
         return None
 
 
-def select_result_and_browser(results: list, config: InstanceConfig) -> Tuple[str, str]:
-    for result in results:
-        if source := config.match_url_with_source(result):
-            browser = select_browser(source, config)
-            if config.lucky or offer_user_page_launch(result, browser):
-                return result, browser
-    print(
-        f"No other likely results found from {config.keyword}"
-        f" sources for {config.terms}."
-    )
+def select_result_and_browser(result: str, config: InstanceConfig) -> Tuple[str, str] | Tuple[None, None]:
+    if source := config.match_url_with_source(result):
+        browser = select_browser(source, config)
+        if config.lucky or offer_user_page_launch(result, browser):
+            return result, browser
     return None, None
 
 
@@ -130,11 +132,13 @@ def select_browser(source: str, config) -> str:
 
 def offer_user_page_launch(url: str, browser: str) -> bool:
     while True:
-        response = input(f"Go to {url}? (browser: {browser}) Y/n: ").lower()
+        response = input(f"Go to {url}? (browser: {browser}) Y/n/q: ").lower()
         if response.lower() in ["no", "n"]:
             return False
         if response.lower() in ["y", "yes", ""]:
             return True
+        if response.lower() == "q":
+            exit()
 
 
 def load_config(path: str, keyword: str) -> InstanceConfig:
