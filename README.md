@@ -20,12 +20,21 @@ DocTer's configuration allows you filter your search to specific sites, so you'r
 - flexible, and
 - lightweight; one script with no dependencies.
 
+## Requirements
+
+- Python 3.11+
+- A TUI web browser such as `w3m`
+
+## Installation
+
+It's a self-contained Python script. I recommend just downloading it, running `chmod +x docter.py` and adding it to your `$PATH`.
+
 ## Configuration and key concepts
 
 DocTer has two key concepts.
 
-- *Sources*: Sources are websites that you find useful for documentation certain topics.
-- *Keywords*: The first argument provided to docter is called a keyword. Keywords serve two roles. They map to a collection of sources. Also, they can be expanded into multiple search terms.
+- **Sources**: Sources are websites that you find useful for documentation certain topics.
+- **Keywords**: The first argument provided to docter is called a keyword. Keywords serve two roles. They map to a collection of sources. Also, they can be expanded into multiple search terms.
 
 ### Minimal Example
 
