@@ -4,6 +4,7 @@ import subprocess
 import argparse
 import re
 from urllib.request import Request, urlopen
+from typing import Tuple
 from pathlib import Path
 
 
@@ -48,11 +49,21 @@ class InstanceConfig:
     def __init__(self, global_config, args) -> None:
         self.keyword = args.keyword
         self.handle_no_keyword(global_config)
-        self.defaultbrowser = global_config["defaultbrowser"]
-        self.defaultgui = global_config["defaultgui"]
+        try:
+            self.defaultbrowser = global_config["defaultbrowser"]
+        except KeyError:
+            self.defaultbrowser = "w3m"
+        try:
+            self.defaultgui = global_config["defaultgui"]
+        except KeyError:
+            self.defaultgui = None
         self.set_browser = args.browser
         self.gui_browser = args.gui
-        self.lucky = args.lucky or global_config["always_lucky"]
+        try:
+            always_lucky = global_config["always_lucky"]
+        except KeyError:
+            always_lucky = False
+        self.lucky = args.lucky or always_lucky
         self.terms = args.terms
         self.added_terms = global_config["keywords"][self.keyword]["terms"]
         self.sources = self.make_sources_dict(global_config)
@@ -80,7 +91,8 @@ class InstanceConfig:
             self.keyword = ""
 
     def get_search_string(self) -> str:
-        search_str = " ".join(self.added_terms + self.terms)
+        added_terms = self.added_terms.split()
+        search_str = " ".join(added_terms + self.terms)
         return search_str
 
     def match_url_with_source(self, url: str) -> str | None:
@@ -94,7 +106,7 @@ class InstanceConfig:
         return None
 
 
-def select_result_and_browser(results: list, config) -> tuple:
+def select_result_and_browser(results: list, config: InstanceConfig) -> Tuple[str, str]:
     for result in results:
         if source := config.match_url_with_source(result):
             browser = select_browser(source, config)
