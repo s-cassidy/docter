@@ -31,6 +31,8 @@ It's a self-contained Python script. I recommend just downloading it, running `c
 
 ## Configuration and key concepts
 
+You must create a config file. By default it should be in `~/.config/` and be called `docter.toml`, but feel free to change this in the script.
+
 DocTer has two key concepts.
 
 - **Sources**: Sources are websites that you find useful for documentation certain topics.
