@@ -72,9 +72,11 @@ $ docter python requests
 ```
 First, as `python` is a keyword listed in the `[keywords]` table, it expands to search for the terms `python doc requests`. We then are asked
 ```
-Go to https://requests.readthedocs.io/? (browser: w3m) Y/n:
+Did you want https://requests.readthedocs.io/? (browser: w3m) Y/m/n/q:
 ```
-This is because `readthedocs` is listed as a source for Python documentation. Results from the search that do not include `docs.python.org`, `pypi.org`, or `readthedocs.io` are not offered - so anything from `cheat.sh` will not be included either.
+This is because `readthedocs` is listed as a source for Python documentation. Results from the search that do not include `docs.python.org`, `pypi.org`, or `readthedocs.io` are not offered - so anything from `cheat.sh` will not be included either. 
+
+The options "Y/m/n/q" are for **yes** (open the page and end the search), **maybe** (open the page but offer the next result once done), **no** (move on to the next result) and **quit**.
 
 ### Example 2
 
@@ -102,7 +104,7 @@ $ docter xy tmux
 searches for `learn x in y minutes tmux`, and offers
 
 ```
-Go to https://learnxinyminutes.com/docs/tmux/? (browser: links2) Y/n:
+Did you want https://learnxinyminutes.com/docs/tmux/? (browser: links2) Y/m/n/q:
 ```
 
 In other words, the default browser is overridden because the source `xinymins` has a browser set.

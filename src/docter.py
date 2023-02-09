@@ -12,10 +12,10 @@ def main():
     args = get_arguments()
     config_path = f"{str(Path.home())}/.config/docter.toml"
     instance_config = load_config(config_path, args)
-    search_str = instance_config.get_search_string()
+    search_str = instance_config.search_str
     search_result_page = ddg_search(search_str)
     results = [result for result in get_result_urls(search_result_page)]
-    offer_results(results, instance_config)
+    process_results(results, instance_config)
     print(
         f"No other likely results found from {instance_config.keyword}"
         f" sources for '{' '.join(instance_config.terms)}'."
@@ -69,6 +69,7 @@ class InstanceConfig:
         self.terms = args.terms
         self.added_terms = global_config["keywords"][self.keyword]["terms"]
         self.sources = self.make_sources_dict(global_config)
+        self.search_str = self.get_search_string()
 
     def make_sources_dict(self, global_config: dict) -> dict:
         keyword_sources = global_config["keywords"][self.keyword]["sources"]
@@ -108,24 +109,20 @@ class InstanceConfig:
         return None
 
 
-def offer_results(results: List[str], config: InstanceConfig):
+def process_results(results: List[str], config: InstanceConfig):
     for result in results:
-        result_url, browser = select_result_and_browser(result, config)
-        if result_url is not None:
-            print("Launching page")
-            launch_page(browser, result_url)
-            print(
-                f"{browser} browser closed, offering next search result (enter q if done)"
-            )
+        select_result_and_browser(result, config)
+
 
 def select_result_and_browser(
     result: str, config: InstanceConfig
 ) -> Tuple[str, str] | Tuple[None, None]:
     if source := config.match_url_with_source(result):
         browser = select_browser(source, config)
-        if config.lucky or offer_user_page_launch(result, browser):
-            return result, browser
-    return None, None
+        if config.lucky:
+            launch_page(browser, result)
+            exit()
+        offer_user_page_launch(result, browser)
 
 
 def select_browser(source: str, config) -> str:
@@ -139,11 +136,18 @@ def select_browser(source: str, config) -> str:
 
 def offer_user_page_launch(url: str, browser: str) -> bool:
     while True:
-        response = input(f"Go to {url}? (browser: {browser}) Y/n/q: ").lower()
+        response = input(f"Did you want {url}? (browser: {browser}) Y/m/n/q: ").lower()
         if response.lower() in ["no", "n"]:
-            return False
+            break
         if response.lower() in ["y", "yes", ""]:
-            return True
+            launch_page(browser, url)
+            exit()
+        if response.lower() in ["m"]:
+            launch_page(browser,url)
+            print(
+                f"{browser} browser closed, offering next search result (enter q if done)"
+            )
+            break
         if response.lower() == "q":
             exit()
 
