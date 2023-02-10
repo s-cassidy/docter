@@ -98,26 +98,23 @@ class InstanceConfig:
         search_str = " ".join(added_terms + self.terms)
         return search_str
 
-    def match_url_with_source(self, url: str) -> str | None:
-        for source_name, source_info in self.sources.items():
-            try:
-                pattern = source_info["urlpattern"]
-            except KeyError:
-                print(f"Warning: source {source_name} is not configured")
-            if pattern in url:
-                return source_name
-        return None
+
+def match_url_with_source(url: str, sources: dict) -> str | None:
+    for source_name, source_info in sources.items():
+        try:
+            pattern = source_info["urlpattern"]
+        except KeyError:
+            print(f"Warning: source {source_name} is not configured")
+        if pattern in url:
+            return source_name
+    return None
 
 
 def process_results(results: List[str], config: InstanceConfig):
     for result in results:
-        select_result_and_browser(result, config)
-
-
-def select_result_and_browser(
-    result: str, config: InstanceConfig
-) -> Tuple[str, str] | Tuple[None, None]:
-    if source := config.match_url_with_source(result):
+        source = match_url_with_source(result, config.sources)
+        if not source:
+            continue
         browser = select_browser(source, config)
         if config.lucky:
             launch_page(browser, result)
