@@ -8,7 +8,7 @@ from typing import Tuple, List
 from pathlib import Path
 
 
-def main():
+def main() -> None:
     args = get_arguments()
     config_path = f"{str(Path.home())}/.config/docter.toml"
     instance_config = load_config(config_path, args)
@@ -110,7 +110,7 @@ def match_url_with_source(url: str, sources: dict) -> str | None:
     return None
 
 
-def process_results(results: List[str], config: InstanceConfig):
+def process_results(results: List[str], config: InstanceConfig) -> None:
     for result in results:
         source = match_url_with_source(result, config.sources)
         if not source:
@@ -122,7 +122,7 @@ def process_results(results: List[str], config: InstanceConfig):
         offer_user_page_launch(result, browser)
 
 
-def select_browser(source: str, config) -> str:
+def select_browser(source: str, config: InstanceConfig) -> str:
     if config.set_browser:
         return config.set_browser
     if config.gui_browser:
@@ -131,7 +131,7 @@ def select_browser(source: str, config) -> str:
     return config.sources[source].get("browser", default)
 
 
-def offer_user_page_launch(url: str, browser: str) -> bool:
+def offer_user_page_launch(url: str, browser: str) -> None:
     while True:
         response = input(f"Did you want {url}? (browser: {browser}) Y/m/n/q: ").lower()
         if response.lower() in ["no", "n"]:
