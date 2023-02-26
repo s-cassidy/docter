@@ -89,7 +89,7 @@ class InstanceConfig:
                 f"{keyword} is not a keyword;"
                 " performing a standard search with default settings"
             )
-            config["keywords"][""] = {"terms": [keyword], "sources": ["any"]}
+            config["keywords"][""] = {"terms": keyword, "sources": ["any"]}
             config["sources"]["any"] = {"urlpattern": ""}
             self.keyword = ""
 
